@@ -1,0 +1,92 @@
+Proyecto No.1
+
+```{r}
+library(arules)
+
+
+data_departamento <- read.csv('C:\\Users\\NOrellana\\Documents\\U\\Maestria\\data mining\\proyecto No1\\departamento y causas.csv', sep=",")
+data_edad <- read.csv('C:\\Users\\NOrellana\\Documents\\U\\Maestria\\data mining\\proyecto No1\\edad y causas.csv', sep=",")
+
+#
+data_departamento <- data_departamento[, c(0,1,3,5,6)]
+# Crear columnas de tipo factor para usar como items en Apriori
+data_edad$Género <- ifelse(data_edad$Hombres > 0, "Hombres", "Mujeres")
+data_edad <- data_edad[, c(0,1,3,5,6)]
+data_edad$`Grupos de edad` <- as.factor(data_edad$`X.Grupos.de.edad`)
+data_edad$`Causa de atención` <- as.factor(data_edad$`Causa.de.atención`)
+data_edad$Hombres <- as.factor(data_edad$Hombres)
+data_edad$Mujeres <- as.factor(data_edad$Mujeres)
+head(data_edad)
+
+# Seleccionamos solo las columnas relevantes
+#datos_transformados <- data_edad[, c("Causa_de_atencion", "Género")]
+transacciones <- as(split(data_edad$`Causa de atención`, 
+                          rownames(data_edad)), "transactions")
+# Aplicar el algoritmo Apriori
+reglas <- apriori(data_departamento, parameter = list(supp = 0.01, conf = 0.5))
+
+
+# Inspeccionar las reglas generadas
+inspect(reglas)
+# Filtrar reglas interesantes
+reglas_interesantes <- subset(reglas, lift > 1.5)
+inspect(reglas_interesantes[0:100])
+
+#install.packages("arulesViz")
+library(arulesViz)
+plot(reglas, method = "graph", control = list(type = "items"))
+
+```
+
+Test2 
+```{r}
+data_2022 <- read.csv('C:\\Users\\NOrellana\\Documents\\U\\Maestria\\data mining\\proyecto No1\\departamento y causas.csv', sep=",")
+
+# Filtrar los datos para omitir las filas donde Sexo es "Total sexo" o "Ignorado"
+data_filtrado <- data_2022[!(data_2022$Sexo %in% c("Total sexo", "Ignorado")), ]
+transacciones <- as(data_filtrado, "transactions")
+reglas <- apriori(transacciones, parameter = list(support=0.2, confidence=0.2))
+reglas_no_vacias <- subset(reglas, size(lhs(reglas)) > 0 & size(rhs(reglas)) > 0)
+inspect(reglas)
+
+```
+
+```{r}
+# Cargar librerías necesarias
+library(readr)
+library(arules)
+
+# Leer el archivo CSV
+data <- read_csv('C:\\Users\\NOrellana\\Documents\\U\\Maestria\\data mining\\proyecto No1\\departamento y causas.csv')
+
+# Convertir columnas relevantes a factores
+data$`Grupos de edad` <- as.factor(data$`Grupos de edad`)
+data$Sexo <- as.factor(data$Sexo)
+
+# Remover filas donde Sexo es "Total sexo" o "Ignorado"
+data_filtrado <- subset(data, !(Sexo %in% c("Total sexo", "Ignorado")))
+
+# Convertir las columnas numéricas en factores
+data_filtrado$`Primera consulta` <- as.factor(gsub(",", "", data_filtrado$`Primera consulta`))
+data_filtrado$Reconsulta <- as.factor(gsub(",", "", data_filtrado$Reconsulta))
+data_filtrado$Emergencia <- as.factor(gsub(",", "", data_filtrado$Emergencia))
+data_filtrado$`Primera consulta y emergencia` <- as.factor(gsub(",", "", data_filtrado$`Primera consulta y emergencia`))
+data_filtrado$`Reconsulta y emergencia` <- as.factor(gsub(",", "", data_filtrado$`Reconsulta y emergencia`))
+
+
+# Aplicar el algoritmo Apriori
+reglas <- apriori(data_filtrado, parameter = list(supp = 0.1, conf = 0.5))
+
+# Filtrar reglas que no tengan elementos vacíos en el antecedente y el consecuente
+reglas_no_vacias <- subset(reglas, size(lhs(reglas)) > 0 & size(rhs(reglas)) > 0)
+
+# Inspeccionar las primeras reglas generadas
+inspect(reglas[1:100])
+# Convertir a formato transaccional
+transacciones <- as(data_filtrado, "transactions")
+frecuentes <- arules::fim4r(method = 'fpgrowth', transactions = transacciones, support = 0.1, confidence = 0.5)
+inspect(frecuentes)
+
+```
+
+
